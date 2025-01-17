@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<title>GERP QMS Login</title>
+	<!-- Custom fonts for this template-->
+	<link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+	<link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+	
+	<!-- Custom styles for this template-->
+	<link href="css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-primary">
+
+	<div class="container">
+
+		<!-- Outer Row -->
+		<div class="row justify-content-center">
+			<div class="col-xl-10 col-lg-12 col-md-9">
+				<div class="card o-hidden border-0 shadow-lg my-5">
+					<div class="card-body p-0">
+						<!-- Nested Row within Card Body -->
+						<div class="row">
+							<div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
+							<div class="col-lg-6">
+								<div class="p-5">
+									<div class="text-center">
+										<h1 class="h4 text-gray-900 mb-4" >Sign in Daedong QMS</h1>
+									</div>
+									<div class="text-center">
+										<h2 class="h5 text-gray-900 mb-4" >대동모벨시스템(주)</h2>
+									</div>
+									<form class="user" id="loginForm" onkeypress="submitOnEnter(event)">
+										<div class="form-group">
+											<input placeholder="id" type="text" name="userid" class="form-control" id="yourUsername" required oninput="this.value = this.value.toUpperCase();"  autofocus />
+										</div>
+										<div class="form-group">
+											<input placeholder="pw" type="password" name="userpw" class="form-control" id="yourPassword" required oninput="this.value = this.value.toUpperCase();" />
+										</div>
+										<button type="button" class="btn btn-primary btn-user btn-block" id="loginButton" onclick="document.getElementById('loginForm').submit(); return false;">Login</button>
+									</form>
+									<div class="text-center">
+										<a class="small">Please enter your password!</a>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Bootstrap core JavaScript-->
+	<script src="/vendor/jquery/jquery.min.js"></script>
+	<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+	<!-- Core plugin JavaScript-->
+	<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+	<!-- Custom scripts for all pages-->
+	<script src="/js/sb-admin-2.min.js"></script>
+	<script>
+		// Enter 키를 눌렀을 때 폼을 제출하는 함수
+		function submitOnEnter(event) {
+			if (event.key === "Enter") {
+				event.preventDefault(); // 기본 Enter 동작 막기
+				//document.getElementById('loginForm').submit(); // 폼 제출
+				$('#loginButton').click(); // 버튼 클릭 이벤트 호출
+			}
+		}
+		// AJAX로 로그인 처리
+		$('#loginButton').click(function() {
+		    $.ajax({
+				url: '/search',
+				type: 'POST',
+				data: {
+					userid: $('#yourUsername').val().trim(),
+					userpw: $('#yourPassword').val().trim()
+				},
+				beforeSend: function() {
+					// 요청 전 로딩 스피너나 로딩 메시지
+					console.log("Sending login request...");
+				},
+				success: function(response) {
+					console.log("Login response:", response);
+				       
+				    if (response.loginFail) {
+				        alert("아이디 또는 비밀번호를 확인해주세요.");
+				    } else if (response.loginFail_vndmst) {
+				        alert("거래처 중지된 업체입니다.");
+				    } else if (response.SessionOut) {
+				        alert("로그인 세션이 만료되었습니다. 다시 로그인 하세요.");
+				    } else if (response.initlgoin) {} 
+				    else {
+				    	 alert("로그인 성공");
+					     //window.location.href = "/home";
+				    }
+				    // 새로고침할 때 URL 파라미터 제거
+		            window.history.replaceState({}, document.title, '/login');  // URL 변경
+					window.location.href = '/login';  // 실제 페이지 이동
+				},
+				error: function(xhr, status, error) {
+					console.log('AJAX 요청 실패:', error);
+				}
+			});
+		});
+	</script>
+	<script>
+	    const loginFail      = [[${loginFail} ?: false]];
+	    const loginFail_vndmst = [[${loginFail_vndmst} ?: false]];
+	    const SessionOut     = [[${SessionOut} ?: false]];
+
+	    console.log("loginFail:", loginFail);
+	    console.log("loginFail_null:", loginFail_vndmst);
+	    console.log("SessionOut:", SessionOut);
+
+	    if (loginFail) {
+	        alert("아이디 또는 비밀번호를 확인해주세요.");
+	    } else if (loginFail_vndmst) {
+	        alert("거래처 중지된 업체입니다.");
+	    } else if (SessionOut) {
+	        alert("로그인 세션이 만료되었습니다. 다시 로그인 하세요.");
+	    }
+	</script>
+</body>
+</html>
