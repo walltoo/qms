@@ -1,4 +1,5 @@
 package com.gerp.qms.domain;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,4 +18,5 @@ public class Sys_user {
 	private String lancd;
 	private Number cnt;
 	private String message;
+	
 }

@@ -9,7 +9,7 @@ import java.util.List;
 @Mapper
 public interface LoginDAO {
 	//1.sys_com 자료 조회
-    @Select("SELECT COMID, CVNAS, ADDR, #{usernm} AS USERNM FROM SYS_COM WHERE COMID = #{comid} AND ROWNUM=1")
+    @Select(" SELECT COMID, CVNAS, ADDR, COALESCE(#{usernm}, '') AS USERNM FROM SYS_COM WHERE COMID = #{comid} AND ROWNUM=1 ")
     List<Sys_user> Get_syscom(String comid, String usernm);
     
     //2.sys_userid, 기본거래처 정보 조회 및 아이디/비번 체크

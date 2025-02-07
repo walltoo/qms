@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -12,7 +12,7 @@
 	<link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
 	
 	<!-- Custom styles for this template-->
-	<link href="css/sb-admin-2.min.css" rel="stylesheet">
+	<link href="/css/sb-admin-2.min.css" rel="stylesheet">
 </head>
 <body class="bg-gradient-primary">
 
@@ -34,18 +34,20 @@
 									<div class="text-center">
 										<h2 class="h5 text-gray-900 mb-4" >대동모벨시스템(주)</h2>
 									</div>
-									<form class="user" id="loginForm" onkeypress="submitOnEnter(event)">
+									<!-- <form class="user" id="loginForm" onkeypress="submitOnEnter(event)"> -->
+									<form class="user" id="loginForm" onkeypress="submitOnEnter(event)" onsubmit="return false;">
+									
 										<div class="form-group">
-											<input placeholder="id" type="text" name="userid" class="form-control" id="yourUsername" required oninput="this.value = this.value.toUpperCase();"  autofocus />
+											<input placeholder="id" type="text" name="userid" class="form-control" id="yourUsername" required oninput="this.value = this.value.toUpperCase();"  autofocus autocomplete="off"  />
 										</div>
 										<div class="form-group">
-											<input placeholder="pw" type="password" name="userpw" class="form-control" id="yourPassword" required oninput="this.value = this.value.toUpperCase();" />
+											<input placeholder="pw" type="password" name="userpw" class="form-control" id="yourPassword" required oninput="this.value = this.value.toUpperCase();" autocomplete="new-password" />
 										</div>
-										<button type="button" class="btn btn-primary btn-user btn-block" id="loginButton" onclick="document.getElementById('loginForm').submit(); return false;">Login</button>
+										<!-- <button type="button" class="btn btn-primary btn-user btn-block" id="loginButton" onclick="document.getElementById('loginForm').submit(); return false;">Login</button> -->
+										<button type="button" class="btn btn-primary btn-user btn-block" id="loginButton">Login</button>
 									</form>
 									<div class="text-center">
 										<a class="small">Please enter your password!</a>
-										
 									</div>
 								</div>
 							</div>
@@ -70,63 +72,61 @@
 		function submitOnEnter(event) {
 			if (event.key === "Enter") {
 				event.preventDefault(); // 기본 Enter 동작 막기
-				//document.getElementById('loginForm').submit(); // 폼 제출
 				$('#loginButton').click(); // 버튼 클릭 이벤트 호출
 			}
 		}
 		// AJAX로 로그인 처리
-		$('#loginButton').click(function() {
+		$('#loginButton').click(function(event) {
+			console.log("✅ 버튼이 클릭되었습니다!");
+		    event.preventDefault(); // 폼 기본 제출 동작을 방지	
+		    
+		    let loginData = {
+	            userid: $('#yourUsername').val().trim(),
+	            userpw: $('#yourPassword').val().trim()
+		    };
+		    
 		    $.ajax({
-				url: '/search',
-				type: 'POST',
-				data: {
-					userid: $('#yourUsername').val().trim(),
-					userpw: $('#yourPassword').val().trim()
-				},
-				beforeSend: function() {
-					// 요청 전 로딩 스피너나 로딩 메시지
-					console.log("Sending login request...");
-				},
+		        url: '/search',
+		        type: 'POST',
+		        contentType: "application/json",  // JSON 형식으로 전송
+		        data: JSON.stringify(loginData),  // 데이터를 JSON으로 변환
+		        dataType: "json",  // 응답을 JSON으로 받음
+		        cache: false,  // 캐시 방지
+		        headers: { "Cache-Control": "no-cache" }, // 추가적인 캐시 방지
+		        beforeSend: function() {
+		            console.log("Sending login request...");
+		        },
 				success: function(response) {
-					console.log("Login response:", response);
-				       
-				    if (response.loginFail) {
-				        alert("아이디 또는 비밀번호를 확인해주세요.");
-				    } else if (response.loginFail_vndmst) {
-				        alert("거래처 중지된 업체입니다.");
-				    } else if (response.SessionOut) {
-				        alert("로그인 세션이 만료되었습니다. 다시 로그인 하세요.");
-				    } else if (response.initlgoin) {} 
-				    else {
-				    	 alert("로그인 성공");
-					     //window.location.href = "/home";
-				    }
-				    // 새로고침할 때 URL 파라미터 제거
-		            window.history.replaceState({}, document.title, '/login');  // URL 변경
-					window.location.href = '/login';  // 실제 페이지 이동
+					console.log("✅ AJAX success");
+					console.log(response);
+
+					if (response.token) {
+				        alert("로그인 성공");
+				    	// ✅ JWT 토큰을 localStorage에 저장
+				    	console.log("JWT 저장:", response.token); // 로그 추가 확인
+		                localStorage.setItem("jwtToken", response.token);
+		                //window.location.replace("/main");
+		                window.location.replace("/main?token=" + encodeURIComponent(response.token));
+		            
+		            } else {
+		                alert("로그인 실패!");
+		                // ✅ URL 강제 정리 (로그인 실패 시만 실행됨)
+					    $('#yourUsername').val(""); // 아이디 필드 초기화
+					    $('#yourPassword').val("");
+					    $('#yourUsername').focus();
+					    //URL 강제 정리
+					    window.history.replaceState({}, document.title, "/login");
+		            }
 				},
 				error: function(xhr, status, error) {
 					console.log('AJAX 요청 실패:', error);
+					console.log('❌ AJAX 요청 실패:', error);
+		         	console.log('❌ 상태 코드:', xhr.status);
+			        console.log('❌ 응답 텍스트:', xhr.responseText);
 				}
 			});
 		});
 	</script>
-	<script>
-	    const loginFail      = [[${loginFail} ?: false]];
-	    const loginFail_vndmst = [[${loginFail_vndmst} ?: false]];
-	    const SessionOut     = [[${SessionOut} ?: false]];
-
-	    console.log("loginFail:", loginFail);
-	    console.log("loginFail_null:", loginFail_vndmst);
-	    console.log("SessionOut:", SessionOut);
-
-	    if (loginFail) {
-	        alert("아이디 또는 비밀번호를 확인해주세요.");
-	    } else if (loginFail_vndmst) {
-	        alert("거래처 중지된 업체입니다.");
-	    } else if (SessionOut) {
-	        alert("로그인 세션이 만료되었습니다. 다시 로그인 하세요.");
-	    }
-	</script>
+	
 </body>
 </html>
