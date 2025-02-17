@@ -11,7 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.util.Date;
+
 import java.util.List;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.jsonwebtoken.SignatureException;
 import io.jsonwebtoken.ExpiredJwtException;
 
 @Controller
@@ -82,13 +81,16 @@ public class LoginController {
 				
 				// JWT 생성 JwtService를 사용하여 토큰 생성
                 String token = jwtService.generateToken(login.getUserid(), login.getDeptcd(), login.getUsernm(), login.getEmpno(), login.getLancd(), login.getCvcod()); 
-
+                	
 				// 세션 저장 로그 출력
 				System.out.println("✅ 로그인 성공! 토큰생성 완료");
 				System.out.println("토큰 저장: userid=" + login.getUserid() + ", username=" + login.getUsernm() + ", deptcd=" + login.getDeptcd());
 				System.out.println("토큰 생선된값: " + token);
+				
 				//return "redirect:/main"; // 리다이렉트
 				// 토큰을 URL 파라미터로 포함하여 리다이렉트
+				// JWT를 세션에 저장
+	            session.setAttribute("jwtToken", token);
 				return new ResponseModel(false, false, false, false, token);
 			} else {
 				// 로그인 실패: 거래처 사용중지
@@ -102,61 +104,106 @@ public class LoginController {
 	}
 
 	@GetMapping("/main")
-	public String main(@RequestParam(value = "token", required = false) String token, Model model) {	
-	//public String main(@RequestHeader("Authorization") String authorizationHeader, Model model, HttpServletResponse response) {
-	//public String main(@RequestHeader(value = "Authorization", required = false) String authHeader, Model model) {	
-	    
+	public ResponseModel main(@RequestParam(value = "token", required = false) String token,
+			           @RequestHeader(value = "Authorization", required = false) String authHeader, 
+					   HttpSession session, Model model) {
 		System.out.println("■■ main 페이지(@GetMapping(\"/main\"))");
+
+		if (token == null || token.isEmpty()) {
+			if (authHeader != null && authHeader.startsWith("Bearer ")) {
+				token = authHeader.substring(7); // "Bearer " 이후의 토큰 추출
+			}
+	        else 
+	        {
+	        	 // 세션에서 토큰 가져오기
+	            token = (String) session.getAttribute("jwtToken");
+	        }
+		}
 		System.out.println("토큰 값: " + token);
 		
+	    // 토큰이 여전히 없으면 로그인 페이지로 리다이렉트
 	    if (token == null || token.isEmpty()) {
 	        System.out.println("토큰 없음 → login 리턴");
-	        return "redirect:/login";
+	        //return "redirect:/login";
+	        return new ResponseModel(false, false, true, false, null); // 토큰이 없으면 실패 응답(세션아웃)
 	    }
-	    // JWT에서 사용자 정보 추출
-	    Claims claims;
-	    try {
-	        claims = jwtService.decodeToken(token);
-	    } catch (SignatureException e) {
-	        System.out.println("/main컨트롤 -- JWT 서명 오류: " + e.getMessage());
-	        return "redirect:/login"; // 서명 오류 시 로그인 페이지로 리다이렉트
-	    } catch (ExpiredJwtException e) {
-	        System.out.println("/main컨트롤 -- JWT 만료 오류: " + e.getMessage());
-	        return "redirect:/login"; // 만료 오류 시 로그인 페이지로 리다이렉트
-	    } catch (Exception e) {
-	        System.out.println("/main컨트롤-- JWT 디코딩 실패: " + e.getMessage());
-	        return "redirect:/login"; // 기타 오류 시 로그인 페이지로 리다이렉트
-	    }
-	    
-	    // ✅ JWT 정보 추출
-	    String gs_userid = claims.getSubject(); // 사용자 ID
-	    String gs_usernm = claims.get("gs_usernm", String.class); // 사용자 이름
-	    String gs_deptcd = claims.get("gs_deptcd", String.class); // 부서 코드
 
-	   
-	    if (gs_userid == null) {
-	        // 사용자 정보가 없으면 로그인 페이지로 리다이렉트
-	        model.addAttribute("SessionOut", true);
-	        return "redirect:/login?SessionOut=true";
-	    } else {
-	        // 사용자 정보를 모델에 추가하여 뷰에서 사용
-	    	System.out.println("로그인 SYSCOM조회");
-	    	 // 토큰값 로그 출력
-		    System.out.println("토큰값 가져오기 성공, 조회: userid =" + gs_userid + ", usernm=" + gs_usernm + ", deptcd=" + gs_deptcd);
+		// JWT에서 사용자 정보 추출
+		Claims claims;
+		try {
+			claims = jwtService.decodeToken(token);
+		} catch (SignatureException e) {
+			System.out.println("/main컨트롤 -- JWT 서명 오류: " + e.getMessage());
+			return new ResponseModel(false, false, true, false, null); // 토큰이 없으면 실패 응답(세션아웃)
+		} catch (ExpiredJwtException e) {
+			System.out.println("/main컨트롤 -- JWT 만료 오류: " + e.getMessage());
+			return new ResponseModel(false, false, true, false, null); // 토큰이 없으면 실패 응답(세션아웃)
+		} catch (Exception e) {
+			System.out.println("/main컨트롤-- JWT 디코딩 실패: " + e.getMessage());
+			return new ResponseModel(false, false, true, false, null); // 토큰이 없으면 실패 응답(세션아웃)
+		}
+
+		// ✅ JWT 정보 추출
+		String gs_userid = claims.getSubject(); // 사용자 ID
+		String gs_usernm = claims.get("gs_usernm", String.class); // 사용자 이름
+		String gs_deptcd = claims.get("gs_deptcd", String.class); // 부서 코드
+
+		if (gs_userid == null) {
+			// 사용자 정보가 없으면 로그인 페이지로 리다이렉트
+			model.addAttribute("sessionOut", true);
+			//return "redirect:/login?sessionOut=true";
+			return new ResponseModel(false, false, true, false, null); // 토큰이 없으면 실패 응답(세션아웃)
+		} else {
+			// 사용자 정보를 모델에 추가하여 뷰에서 사용
+			System.out.println("로그인 SYSCOM조회");
+			// 토큰값 로그 출력
+			System.out.println(
+					"토큰값 가져오기 성공, 조회: userid =" + gs_userid + ", usernm=" + gs_usernm + ", deptcd=" + gs_deptcd);
 			if (gs_usernm == null) {
 				gs_usernm = "";
 			}
-	        List<Sys_user> syscom = dao.Get_syscom(ls_comid, gs_usernm);
-	        model.addAttribute("sys_com", syscom);
-	        model.addAttribute("usernm" , gs_usernm); // 모델에 추가
-	    	System.out.println("main 리다이렉트 userid =" + gs_userid + ", usernm=" + gs_usernm);
-	    	return "/main"; // 쿼리 파라미터로 토큰 전달
+			List<Sys_user> syscom = dao.Get_syscom(ls_comid, gs_usernm);
+			model.addAttribute("sys_com", syscom);
+			model.addAttribute("usernm", gs_usernm); // 모델에 추가
+			System.out.println("main 리다이렉트 userid =" + gs_userid + ", usernm=" + gs_usernm);
+			//eturn "/main"; // 쿼리 파라미터로 토큰 전달
+			return new ResponseModel(false, false, false, false, token); // 토큰 응답
+		}
+	}
+	
+	//JMT 토큰값 재갱신 
+	@PostMapping(value = "/refresh-token", produces = "application/json")
+	@ResponseBody
+	public ResponseModel refreshToken(HttpSession session, @RequestHeader("Authorization") String authHeader) {
+	    String token = null;
+
+	    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+	        token = authHeader.substring(7); // "Bearer " 이후의 토큰 추출
+	    } else {
+	        token = (String) session.getAttribute("jwtToken"); // 세션에서 토큰 가져오기
+	    }
+
+	    if (token == null) {
+	        return new ResponseModel(false, false, true, false, null); // 토큰이 없으면 실패 응답(세션아웃)
+	    }
+
+	    try {
+	        Claims claims = jwtService.decodeToken(token); // 현재 토큰의 유효성 확인
+	        String newToken = jwtService.generateToken(claims.getSubject(), claims.get("gs_deptcd", String.class),
+	                claims.get("gs_usernm", String.class), claims.get("gs_empno", String.class),
+	                claims.get("gs_lancd", String.class), claims.get("gs_cvcod", String.class)); // 새로운 토큰 생성
+
+	        session.setAttribute("jwtToken", newToken); // 세션에 새로운 토큰 저장
+	        return new ResponseModel(false, false, false, false, newToken); // 새로운 토큰 응답
+	    } catch (Exception e) {
+	        System.out.println("JWT 갱신 실패: " + e.getMessage());
+	        return new ResponseModel(false, false, true, false, null); // 토큰이 없으면 실패 응답(세션아웃)
 	    }
 	}
 	
-
 	@GetMapping("/logout")
-	public String logout(HttpSession session, HttpServletResponse response) {
+	@ResponseBody // JSON 응답을 반환하기 위해 추가
+	public ResponseModel logout(HttpSession session, HttpServletResponse response) {
 		System.out.println("-----------------");
 		System.out.println("세션무효화 logout");
 
@@ -165,10 +212,15 @@ public class LoginController {
 		response.setHeader("Pragma", "no-cache");
 		response.setDateHeader("Expires", 0);
 
+		// 세션에서 토큰 제거
+	    session.removeAttribute("jwtToken");
+	    
 		// 세션 무효화
 		session.invalidate();
+		System.out.println("세션 무효화 완료");
 		// 로그아웃 후 리다이렉트 (캐시를 방지한 후 로그인 페이지로 이동)
-		return "redirect:/login"; // 리다이렉트
+		//return "redirect:/login"; // 리다이렉트
+		return new ResponseModel(false, false, true, false, null); // 토큰이 없으면 실패 응답(세션아웃)
 	}
 
 	@GetMapping("/{path}")
@@ -202,8 +254,8 @@ public class LoginController {
 		@JsonProperty("loginFail_vndmst")
 		private boolean loginFail_vndmst;
 		
-		@JsonProperty("SessionOut")
-		private boolean SessionOut;
+		@JsonProperty("sessionOut")
+		private boolean sessionOut;
 		
 		@JsonProperty("initLogin")
 		private boolean initlgoin;
@@ -214,7 +266,7 @@ public class LoginController {
 		public ResponseModel(boolean loginFail, boolean loginFail_vndmst, boolean sessionOut, boolean initlgoin, String token) {
 			this.loginFail = loginFail;
 			this.loginFail_vndmst = loginFail_vndmst;
-			SessionOut = sessionOut;	
+			this.sessionOut = sessionOut;	
 			this.initlgoin = initlgoin;
 			this.token = token;
 		}
@@ -227,7 +279,7 @@ public class LoginController {
 		}
 
 		public boolean isSessionOut() {
-			return SessionOut;
+			return sessionOut;
 		}
 		public boolean isInitlgoin() {
 			return initlgoin;

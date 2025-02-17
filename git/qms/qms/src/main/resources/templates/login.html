@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lagn="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -61,7 +61,6 @@
 	<!-- Bootstrap core JavaScript-->
 	<script src="/vendor/jquery/jquery.min.js"></script>
 	<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
 	<!-- Core plugin JavaScript-->
 	<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
 
@@ -99,24 +98,34 @@
 				success: function(response) {
 					console.log("✅ AJAX success");
 					console.log(response);
-
+					
 					if (response.token) {
 				        alert("로그인 성공");
 				    	// ✅ JWT 토큰을 localStorage에 저장
 				    	console.log("JWT 저장:", response.token); // 로그 추가 확인
-		                localStorage.setItem("jwtToken", response.token);
-		                //window.location.replace("/main");
-		                window.location.replace("/main?token=" + encodeURIComponent(response.token));
-		            
-		            } else {
+		                //localStorage.setItem("jwtToken", response.token);
+						sessionStorage.setItem("jwtToken", response.token);
+		                //window.location.replace("/main?token=" + encodeURIComponent(response.token));
+		                window.location.replace("/main"); // 메인 페이지로 이동
+					}
+	                else if (response.loginFail) {
+	                	alert("로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
+					}
+	                else if (response.sessionOut) {
+	                	alert("세션이 유효하지 않습니다!");
+		            } 
+	                else if (response.loginFail_vndmst){
+	                	alert("로그인 실패: 거래중지된 업체 입니다.");
+	                }
+	                else {
 		                alert("로그인 실패!");
-		                // ✅ URL 강제 정리 (로그인 실패 시만 실행됨)
-					    $('#yourUsername').val(""); // 아이디 필드 초기화
-					    $('#yourPassword').val("");
-					    $('#yourUsername').focus();
-					    //URL 강제 정리
-					    window.history.replaceState({}, document.title, "/login");
 		            }
+	                // ✅ URL 강제 정리 (로그인 실패 시만 실행됨)
+				    $('#yourUsername').val(""); // 아이디 필드 초기화
+				    $('#yourPassword').val("");
+				    $('#yourUsername').focus();
+				    //URL 강제 정리
+				    window.history.replaceState({}, document.title, "/login");
 				},
 				error: function(xhr, status, error) {
 					console.log('AJAX 요청 실패:', error);
