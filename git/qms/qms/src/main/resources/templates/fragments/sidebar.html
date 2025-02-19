@@ -1,0 +1,97 @@
+<div th:fragment="sidebar">
+	<!-- Sidebar -->
+	<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+		<!-- Sidebar - Brand -->
+		<li class="nav-item">
+			<a class="sidebar-brand d-flex align-items-center justify-content-center" href="/main">
+				<div>
+					<i>GERP/QMS</i>
+				</div>
+			</a>
+		</li>
+
+		<!-- Divider -->
+		<hr class="sidebar-divider">
+
+		<!-- Heading -->
+		<div class="sidebar-heading">QMS</div>
+
+		<!-- Nav Item - 품질관리 Menu -->
+		<li class="nav-item">
+			<a class="nav-link collapsed" href="#" data-toggle="collapse" aria-expanded="false" data-target="#collapseTwo" aria-controls="collapseTwo">
+				<span>품질관리</span>
+			</a>
+			<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+				<div class="bg-white py-2 collapse-inner rounded">
+					<a class="collapse-item" href="#">검사기준서</a>
+					<a class="collapse-item" href="#">검사성적서</a>
+					<a class="collapse-item" href="/main">정기검사 실적관리</a>
+					<a class="collapse-item" href="#">PPAP 문서관리</a>
+				</div>
+			</div>
+		</li>
+
+		<!-- Divider -->
+		<hr class="sidebar-divider">
+
+		<!-- Heading -->
+		<div class="sidebar-heading">SCM</div>
+
+		<!-- Nav Item - 납품관리 Menu -->
+		<li class="nav-item">
+			<a class="nav-link collapsed" href="#" data-toggle="collapse" aria-expanded="false" data-target="#collapseUtilities" aria-controls="collapseUtilities">
+				<span>납품관리</span>
+			</a>
+			<div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities" data-parent="#accordionSidebar">
+				<div class="bg-white py-2 collapse-inner rounded">
+					<a class="collapse-item" href="#">납품지시</a>
+					<a class="collapse-item" href="#">납품처리</a>
+					<a class="collapse-item" href="#">거래명세서</a>
+					<a class="collapse-item" href="#">납품현황</a>
+					<a class="collapse-item" href="#">마감관리</a>
+					<a class="collapse-item" href="#">라벨발행</a>
+					<a class="collapse-item" href="#">사급현황</a>
+				</div>
+			</div>
+		</li>
+
+		<!-- Nav Item - Pages Collapse Menu -->
+		<li class="nav-item active">
+			<a class="nav-link collapsed" href="#" data-toggle="collapse" aria-expanded="false" data-target="#collapsePages" aria-controls="collapsePages">
+				<span>금형관리</span>
+			</a>
+			<div id="collapsePages" class="collapse show" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+				<div class="bg-white py-2 collapse-inner rounded">
+					<a class="collapse-item" href="#">금형마스터</a>
+				</div>
+			</div>
+		</li>
+
+		<!-- Divider -->
+		<hr class="sidebar-divider">
+
+		<!-- Nav Item - Tables -->
+		<li class="nav-item">
+			<a class="nav-link" href="javascript:void(0);" onclick="logout()">
+				<span>로그아웃</span>
+			</a>
+		</li>
+		
+		<!-- Divider -->
+		<hr class="sidebar-divider">
+
+		<!-- Nav Item - Tables -->
+		<li class="nav-item">
+			<a class="nav-link" href="https://939.co.kr/ddmvs/" target="_blank" >
+				<span>원격지원 요청</span>
+			</a>
+		</li>
+
+		<!-- Divider -->
+		<hr class="sidebar-divider d-none d-md-block">
+
+
+	</ul>
+	<!-- End of Sidebar -->
+</div>

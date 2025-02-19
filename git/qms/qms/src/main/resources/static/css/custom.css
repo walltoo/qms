@@ -1,0 +1,24 @@
+/* 기본 사이드바 스타일 */
+.sidebar {
+    overflow: visible !important;
+}
+
+/* 모바일 화면에서 서브메뉴 스타일 변경 */
+@media (max-width: 768px) {
+    .collapse {
+        position: absolute; /* 절대 위치로 설정 */
+        left: 100%; /* 사이드바 오른쪽으로 이동 */
+        top: 0; /* 상단에 맞춤 */
+        min-width: 200px; /* 최소 너비 설정 */
+        background: white; /* 배경색 */
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+        border-radius: 5px; /* 모서리 둥글기 */
+        display: none; /* 기본적으로 숨김 */
+        z-index: 1050; /* 다른 요소 위에 표시 */
+    }
+
+    /* 서브메뉴가 펼쳐졌을 때 보이도록 */
+    .collapse.show {
+        display: block;
+    }
+}
